@@ -367,24 +367,25 @@
                 }, 1000);
                 
                 // Check using debugger trick
-                let checkCount = 0;
-                const checkDebugger = function() {
-                    checkCount++;
-                    const startTime = new Date().getTime();
-                    debugger;
-                    const endTime = new Date().getTime();
-                    
-                    if (endTime - startTime > 100) {
-                        // Debugger was triggered and paused execution - likely dev tools open
-                        clearPage();
-                    }
-                    
-                    if (checkCount < 10) {
-                        setTimeout(checkDebugger, 1000);
-                    }
-                };
-                
-                checkDebugger();
+            // Check using debugger trick
+let checkCount = 0;
+const checkDebugger = function() {
+    checkCount++;
+    const startTime = new Date().getTime();
+    debugger;
+    const endTime = new Date().getTime();
+    
+    if (endTime - startTime > 100) {
+        // Debugger was triggered and paused execution - likely dev tools open
+        clearPage();
+    }
+    
+    if (checkCount < 10) {
+        setTimeout(checkDebugger, 1000);
+    }
+};
+
+checkDebugger();
             }
             
             // Initialize DevTools protection
