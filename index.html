@@ -4,478 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Video Player</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #fff;
-            /* Remove overflow:hidden to allow scrolling */
-            /* overflow: hidden; */
-            /* Change to min-height to allow content to expand */
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column; /* Make it a column to allow for scrollable content */
-        }
-
-        .video-container {
-            position: relative;
-            width: 90%;
-            max-width: 900px;
-            /* Remove overflow:hidden from container to allow scrolling */
-            /* overflow: hidden; */
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            margin: 20px 0; /* Add margin for spacing */
-        }
-
-        .video-wrapper {
-            position: relative;
-            width: 100%;
-            background-color: #000;
-            cursor: default;
-        }
-
-        /* This class will be added to hide the cursor */
-        .cursor-hidden {
-            cursor: none !important;
-        }
-
-        #videoPlayer {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .video-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            transition: opacity 0.3s ease;
-            opacity: 1;
-        }
-
-        .control-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .control-buttons {
-            display: flex;
-            align-items: center;
-        }
-
-        .btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            margin-right: 10px;
-            padding: 5px;
-            font-size: 16px;
-            transition: color 0.2s;
-            outline: none;
-        }
-
-        .btn:hover {
-            color: #00a8ff;
-        }
-
-        .time-display {
-            margin-left: 10px;
-            font-size: 14px;
-            color: #ddd;
-            min-width: 100px;
-        }
-
-        .progress-container {
-            flex-grow: 1;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            position: relative;
-            cursor: pointer;
-            margin: 0 10px;
-        }
-
-        .progress-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background-color: #00a8ff;
-            border-radius: 4px;
-            width: 0;
-        }
-
-        .progress-ball {
-            position: absolute;
-            top: 50%;
-            width: 14px;
-            height: 14px;
-            background: white;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            left: 0;
-            cursor: pointer;
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-
-        .volume-slider {
-            width: 0;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: width 0.3s;
-            margin-left: 5px;
-        }
-
-        .volume-container:hover .volume-slider {
-            width: 80px;
-        }
-
-        .volume-level {
-            height: 100%;
-            background-color: #00a8ff;
-            width: 100%;
-        }
-
-        .right-controls {
-            display: flex;
-            align-items: center;
-        }
-
-        .quality-dropdown,
-        .audio-dropdown {
-            position: relative;
-            margin-left: 10px;
-        }
-
-        .dropdown-btn {
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            background-color: rgba(0, 0, 0, 0.9);
-            border-radius: 4px;
-            min-width: 100px;
-            z-index: 1;
-        }
-
-        .dropdown-content a {
-            color: white;
-            padding: 8px 10px;
-            text-decoration: none;
-            display: block;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .dropdown-content a:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .hidden {
-            opacity: 0;
-        }
-
-        .fullscreen-icon {
-            margin-left: 10px;
-        }
-
-        /* Make icons from Unicode */
-        .control-icon {
-            font-size: 18px;
-            font-style: normal;
-            display: inline-block;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #00a8ff;
-            animation: spin 1s ease-in-out infinite;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        /* Add scrollable content styles */
-        .scrollable-content {
-            width: 90%;
-            max-width: 900px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* For iOS momentum scrolling */
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(20, 20, 20, 0.8);
-            border-radius: 8px;
-            max-height: 300px; /* Set a max height for scrollable content */
-        }
-    </style>
+    <style> /* ... Your CSS ... */ </style>
 </head>
 <body>
-    <div class="video-container">
-        <div class="video-wrapper" id="videoWrapper">
-            <video id="videoPlayer" poster="/api/placeholder/900/500" playsinline></video>
-            <div class="spinner" id="spinner"></div>
-            <div class="video-controls" id="videoControls">
-                <div class="control-row">
-                    <div class="progress-container" id="progressContainer">
-                        <div class="progress-bar" id="progressBar"></div>
-                        <div class="progress-ball" id="progressBall"></div>
-                    </div>
-                </div>
-                <div class="control-row">
-                    <div class="control-buttons">
-                        <button class="btn" id="playPauseBtn">
-                            <span class="control-icon">▶</span>
-                        </button>
-                        <div class="volume-container">
-                            <button class="btn" id="muteBtn">
-                                <span class="control-icon">🔊</span>
-                            </button>
-                            <div class="volume-slider" id="volumeSlider">
-                                <div class="volume-level" id="volumeLevel"></div>
-                            </div>
-                        </div>
-                        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-                    </div>
-                    <div class="right-controls">
-                        <div class="audio-dropdown">
-                            <button class="dropdown-btn" id="audioBtn">Audio: English</button>
-                            <div class="dropdown-content" id="audioDropdown">
-                                <a data-audio="0">English</a>
-                                <a data-audio="1">Hindi</a>
-                            </div>
-                        </div>
-                        <div class="quality-dropdown">
-                            <button class="dropdown-btn" id="qualityBtn">Quality: 720p</button>
-                            <div class="dropdown-content" id="qualityDropdown">
-                                <a data-quality="1080">1080p</a>
-                                <a data-quality="720">720p</a>
-                                <a data-quality="480">480p</a>
-                            </div>
-                        </div>
-                        <button class="btn fullscreen-icon" id="fullscreenBtn">
-                            <span class="control-icon">⛶</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- ... Your HTML ... -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.8/hls.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Prevent developer tools - all methods
+
+            // Basic DevTools disabling (less aggressive)
             function disableDevTools() {
-                // Disable right-click
+                // Disable right-click (optional, but not very effective)
                 document.addEventListener('contextmenu', e => e.preventDefault());
-                
-                // Disable keyboard shortcuts
+
+                // Disable keyboard shortcuts (less reliable)
                 document.addEventListener('keydown', function(e) {
-                    // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-                    if (
-                        e.keyCode === 123 || 
-                        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
-                        (e.ctrlKey && e.keyCode === 85)
-                    ) {
+                    // Prevent F12, Ctrl+Shift+I
+                    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && e.keyCode === 73)) {
                         e.preventDefault();
                         return false;
                     }
                 });
-                
-                // Detect and disable console opening
-                const devtools = {
-                    isOpen: false,
-                    orientation: undefined
-                };
-
-
-                // Prevent developer tools - all methods
-function disableDevTools() {
-    // Disable right-click
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    
-    // Disable keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-        if (
-            e.keyCode === 123 || 
-            (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
-            (e.ctrlKey && e.keyCode === 85)
-        ) {
-            e.preventDefault();
-            return false;
-        }
-    });
-    
-    // Detect and disable console opening
-    const devtools = {
-        isOpen: false,
-        orientation: undefined
-    };
-    
-    // Function to clear page if developer tools are detected
-    const clearPage = () => {
-        document.body.innerHTML = "Developer tools detected. Access denied.";
-        document.body.style.background = "black";
-        document.body.style.color = "white";
-        document.body.style.display = "flex";
-        document.body.style.justifyContent = "center";
-        document.body.style.alignItems = "center";
-        document.body.style.height = "100vh";
-        document.body.style.fontFamily = "Arial, sans-serif";
-    };
-    
-    // Check using console.table trick
-    setInterval(() => {
-        const widthThreshold = Math.max(window.outerWidth - window.innerWidth, 160);
-        const heightThreshold = Math.max(window.outerHeight - window.innerHeight, 160);
-        
-        if (!(heightThreshold && widthThreshold)) {
-            // One of the dimensions matches, probably no devtools
-            return;
-        }
-        
-        if (
-            (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || 
-            widthThreshold > 160 || 
-            heightThreshold > 160
-        ) {
-            if (!devtools.isOpen) {
-                devtools.isOpen = true;
-                clearPage();
             }
-        } else {
-            devtools.isOpen = false;
-        }
-    }, 1000);
-    
-    // Check using debugger trick
-    let checkCount = 0;
-    const checkDebugger = function() {
-        checkCount++;
-        const startTime = new Date().getTime();
-        debugger;
-        const endTime = new Date().getTime();
-        
-        if (endTime - startTime > 100) {
-            // Debugger was triggered and paused execution - likely dev tools open
-            clearPage();
-        }
-        
-        if (checkCount < 10) {
-            setTimeout(checkDebugger, 1000);
-        }
-    };
-    
-    checkDebugger();
-}
 
-// Initialize DevTools protection
-disableDevTools();
-                
-                // Function to clear page if developer tools are detected
-                const clearPage = () => {
-                    document.body.innerHTML = "Developer tools detected. Access denied.";
-                    document.body.style.background = "black";
-                    document.body.style.color = "white";
-                    document.body.style.display = "flex";
-                    document.body.style.justifyContent = "center";
-                    document.body.style.alignItems = "center";
-                    document.body.style.height = "100vh";
-                    document.body.style.fontFamily = "Arial, sans-serif";
-                };
-                
-                // Check using console.table trick
-                setInterval(() => {
-                    const widthThreshold = Math.max(window.outerWidth - window.innerWidth, 160);
-                    const heightThreshold = Math.max(window.outerHeight - window.innerHeight, 160);
-                    
-                    if (!(heightThreshold && widthThreshold)) {
-                        // One of the dimensions matches, probably no devtools
-                        return;
-                    }
-                    
-                    if (
-                        (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || 
-                        widthThreshold > 160 || 
-                        heightThreshold > 160
-                    ) {
-                        if (!devtools.isOpen) {
-                            devtools.isOpen = true;
-                            clearPage();
-                        }
-                    } else {
-                        devtools.isOpen = false;
-                    }
-                }, 1000);
-                
-                // Check using debugger trick
-            // Check using debugger trick
-let checkCount = 0;
-const checkDebugger = function() {
-    checkCount++;
-    const startTime = new Date().getTime();
-    debugger;
-    const endTime = new Date().getTime();
-    
-    if (endTime - startTime > 100) {
-        // Debugger was triggered and paused execution - likely dev tools open
-        clearPage();
-    }
-    
-    if (checkCount < 10) {
-        setTimeout(checkDebugger, 1000);
-    }
-};
-
-checkDebugger();
-            }
-            
-            // Initialize DevTools protection
             disableDevTools();
-            
+
+            //Video player code - same as yours
+
             // Video player elements
             const videoPlayer = document.getElementById('videoPlayer');
             const videoControls = document.getElementById('videoControls');
@@ -495,7 +51,7 @@ checkDebugger();
             const spinner = document.getElementById('spinner');
             const videoContainer = document.querySelector('.video-container');
             const videoWrapper = document.getElementById('videoWrapper');
-            
+
             // Video sources
             const sources = {
                 video: {
@@ -508,7 +64,7 @@ checkDebugger();
                     '1': 'https://s20.nm-cdn.top/files/80216309/a/1/1.m3u8'
                 }
             };
-            
+
             // Current settings
             let currentQuality = '720';
             let currentAudio = '0';
@@ -519,29 +75,29 @@ checkDebugger();
             let hls = null;
             let hlsAudio = null;
             let isMobile = false;
-            
+
             // Check if device is mobile
             function checkMobile() {
                 return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             }
-            
+
             // Initialize mobile detection
             isMobile = checkMobile();
-            
+
             // Check if HLS is supported
             function initializeVideo() {
                 if (Hls.isSupported()) {
                     hls = new Hls();
                     hls.loadSource(sources.video[currentQuality]);
                     hls.attachMedia(videoPlayer);
-                    
+
                     // Load audio separately
                     initializeAudio();
-                    
+
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         hideSpinner();
                     });
-                    
+
                     hls.on(Hls.Events.ERROR, function(event, data) {
                         console.log('HLS error:', data);
                         if (data.fatal) {
@@ -567,7 +123,7 @@ checkDebugger();
                     alert('HLS is not supported in your browser');
                 }
             }
-            
+
             // Initialize audio
             function initializeAudio() {
                 // Create an audio element for separate audio track
@@ -576,42 +132,42 @@ checkDebugger();
                     document.body.appendChild(audioPlayer);
                     audioPlayer.style.display = 'none';
                 }
-                
+
                 if (Hls.isSupported()) {
                     if (hlsAudio) {
                         hlsAudio.destroy();
                     }
-                    
+
                     hlsAudio = new Hls();
                     hlsAudio.loadSource(sources.audio[currentAudio]);
                     hlsAudio.attachMedia(audioPlayer);
-                    
+
                     hlsAudio.on(Hls.Events.MANIFEST_PARSED, function() {
                         // Sync audio with video
                         videoPlayer.addEventListener('play', function() {
                             audioPlayer.play();
                         });
-                        
+
                         videoPlayer.addEventListener('pause', function() {
                             audioPlayer.pause();
                         });
-                        
+
                         videoPlayer.addEventListener('seeking', function() {
                             audioPlayer.currentTime = videoPlayer.currentTime;
                         });
                     });
                 }
             }
-            
+
             // Change video quality
             function changeQuality(quality) {
                 showSpinner();
                 const currentTime = videoPlayer.currentTime;
                 const isPaused = videoPlayer.paused;
-                
+
                 currentQuality = quality;
                 qualityBtn.textContent = `Quality: ${quality}p`;
-                
+
                 if (hls) {
                     hls.loadSource(sources.video[quality]);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
@@ -629,21 +185,21 @@ checkDebugger();
                     }
                 }
             }
-            
+
             // Change audio track
             function changeAudio(audioTrack) {
                 const currentTime = videoPlayer.currentTime;
                 currentAudio = audioTrack;
-                
+
                 if (audioTrack === '0') {
                     audioBtn.textContent = 'Audio: English';
                 } else {
                     audioBtn.textContent = 'Audio: Hindi';
                 }
-                
+
                 if (hlsAudio) {
                     hlsAudio.loadSource(sources.audio[audioTrack]);
-                    
+
                     hlsAudio.on(Hls.Events.MANIFEST_PARSED, function() {
                         audioPlayer.currentTime = currentTime;
                         if (!videoPlayer.paused) {
@@ -652,24 +208,24 @@ checkDebugger();
                     });
                 }
             }
-            
+
             // Format time in seconds to MM:SS
             function formatTime(seconds) {
                 const minutes = Math.floor(seconds / 60);
                 seconds = Math.floor(seconds % 60);
                 return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }
-            
+
             // Show loading spinner
             function showSpinner() {
                 spinner.style.display = 'block';
             }
-            
+
             // Hide loading spinner
             function hideSpinner() {
                 spinner.style.display = 'none';
             }
-            
+
             // Update progress bar
             function updateProgress() {
                 const percent = (videoPlayer.currentTime / videoPlayer.duration) * 100;
@@ -677,7 +233,7 @@ checkDebugger();
                 progressBall.style.left = `${percent}%`;
                 timeDisplay.textContent = `${formatTime(videoPlayer.currentTime)} / ${formatTime(videoPlayer.duration)}`;
             }
-            
+
             // Set progress bar position on click
             function setProgress(e) {
                 const rect = progressContainer.getBoundingClientRect();
@@ -685,13 +241,13 @@ checkDebugger();
                 videoPlayer.currentTime = pos * videoPlayer.duration;
                 audioPlayer.currentTime = videoPlayer.currentTime;
             }
-            
+
             // Show controls
             function showControls() {
                 videoControls.classList.remove('hidden');
                 clearTimeout(controlsTimeout);
             }
-            
+
             // Hide controls after delay
             function hideControlsWithDelay() {
                 clearTimeout(controlsTimeout);
@@ -699,7 +255,7 @@ checkDebugger();
                     videoControls.classList.add('hidden');
                 }, 3000);
             }
-            
+
             // Show cursor
             function showCursor() {
                 if (isMobile) {
@@ -707,7 +263,7 @@ checkDebugger();
                     clearTimeout(cursorTimeout);
                 }
             }
-            
+
             // Hide cursor after delay (only on mobile)
             function hideCursorWithDelay() {
                 if (isMobile) {
@@ -717,7 +273,7 @@ checkDebugger();
                     }, 3000);
                 }
             }
-            
+
             // Toggle play/pause
             function togglePlay() {
                 if (videoPlayer.paused) {
@@ -730,7 +286,7 @@ checkDebugger();
                     playPauseBtn.innerHTML = '<span class="control-icon">▶</span>';
                 }
             }
-            
+
             // Toggle mute
             function toggleMute() {
                 if (videoPlayer.muted) {
@@ -745,28 +301,28 @@ checkDebugger();
                     volumeLevel.style.width = '0';
                 }
             }
-            
+
             // Set volume
             function setVolume(e) {
                 const rect = volumeSlider.getBoundingClientRect();
                 let volume = (e.clientX - rect.left) / rect.width;
-                
+
                 // Clamp volume between 0 and 1
                 volume = Math.max(0, Math.min(1, volume));
-                
+
                 videoPlayer.volume = volume;
                 audioPlayer.volume = volume;
                 lastVolumeLevel = volume;
-                
+
                 volumeLevel.style.width = `${volume * 100}%`;
-                
+
                 if (volume === 0) {
                     muteBtn.innerHTML = '<span class="control-icon">🔇</span>';
                 } else {
                     muteBtn.innerHTML = '<span class="control-icon">🔊</span>';
                 }
             }
-            
+
             // Toggle fullscreen
             function toggleFullscreen() {
                 if (!document.fullscreenElement) {
@@ -777,61 +333,61 @@ checkDebugger();
                     document.exitFullscreen();
                 }
             }
-            
+
             // Event listeners
             playPauseBtn.addEventListener('click', togglePlay);
             videoPlayer.addEventListener('click', togglePlay);
-            
+
             muteBtn.addEventListener('click', toggleMute);
-            
+
             volumeSlider.addEventListener('click', setVolume);
             volumeSlider.addEventListener('mousemove', function(e) {
                 if (e.buttons === 1) {  // Only if mouse button is pressed
                     setVolume(e);
                 }
             });
-            
+
             progressContainer.addEventListener('click', setProgress);
             progressContainer.addEventListener('mousemove', function(e) {
                 if (e.buttons === 1) {  // Only if mouse button is pressed
                     setProgress(e);
                 }
             });
-            
+
             fullscreenBtn.addEventListener('click', toggleFullscreen);
-            
+
             videoPlayer.addEventListener('timeupdate', updateProgress);
-            
+
             videoPlayer.addEventListener('loadedmetadata', function() {
                 timeDisplay.textContent = `0:00 / ${formatTime(videoPlayer.duration)}`;
             });
-            
+
             // Quality dropdown
             qualityBtn.addEventListener('click', function() {
                 qualityDropdown.style.display = qualityDropdown.style.display === 'block' ? 'none' : 'block';
                 audioDropdown.style.display = 'none';  // Hide other dropdown
             });
-            
+
             document.querySelectorAll('#qualityDropdown a').forEach(item => {
                 item.addEventListener('click', function() {
                     changeQuality(this.getAttribute('data-quality'));
                     qualityDropdown.style.display = 'none';
                 });
             });
-            
+
             // Audio dropdown
             audioBtn.addEventListener('click', function() {
                 audioDropdown.style.display = audioDropdown.style.display === 'block' ? 'none' : 'block';
                 qualityDropdown.style.display = 'none';  // Hide other dropdown
             });
-            
+
             document.querySelectorAll('#audioDropdown a').forEach(item => {
                 item.addEventListener('click', function() {
                     changeAudio(this.getAttribute('data-audio'));
                     audioDropdown.style.display = 'none';
                 });
             });
-            
+
             // Controls and cursor visibility management
             videoContainer.addEventListener('touchstart', function() {
                 showControls();
@@ -839,73 +395,73 @@ checkDebugger();
                 hideControlsWithDelay();
                 hideCursorWithDelay();
             });
-            
+
             videoContainer.addEventListener('touchmove', function() {
                 showControls();
                 showCursor();
                 hideControlsWithDelay();
                 hideCursorWithDelay();
             });
-            
+
             videoContainer.addEventListener('mousemove', function() {
                 showControls();
                 showCursor();
                 hideControlsWithDelay();
                 hideCursorWithDelay();
             });
-            
+
             videoContainer.addEventListener('mouseleave', function() {
                 videoControls.classList.add('hidden');
                 if (isMobile) {
                     videoWrapper.classList.add('cursor-hidden');
                 }
             });
-            
+
             // Close dropdowns when clicking outside
             document.addEventListener('click', function(e) {
                 if (!qualityBtn.contains(e.target) && !qualityDropdown.contains(e.target)) {
                     qualityDropdown.style.display = 'none';
                 }
-                
+
                 if (!audioBtn.contains(e.target) && !audioDropdown.contains(e.target)) {
                     audioDropdown.style.display = 'none';
                 }
             });
-            
+
             // Show loading spinner initially
             showSpinner();
-            
+
             // Start with controls visible then hide after delay
             showControls();
             hideControlsWithDelay();
-            
+
             // Start with cursor visible then hide after delay (only on mobile)
             if (isMobile) {
                 showCursor();
                 hideCursorWithDelay();
             }
-            
+
             // Initialize video
             initializeVideo();
-            
+
             // Add smooth scrolling for PC and mobile
             document.addEventListener('DOMContentLoaded', function() {
                 // Enable smooth scrolling behavior
                 document.documentElement.style.scrollBehavior = 'smooth';
-                
+
                 // Fix for PC mouse wheel scrolling
                 document.addEventListener('wheel', function(e) {
                     // Using passive event listener for better performance
                 }, { passive: true });
-                
+
                 // Touch scrolling fix for mobile
                 let touchStartY = 0;
                 let touchEndY = 0;
-                
+
                 document.addEventListener('touchstart', function(e) {
                     touchStartY = e.changedTouches[0].screenY;
                 }, { passive: true });
-                
+
                 document.addEventListener('touchend', function(e) {
                     touchEndY = e.changedTouches[0].screenY;
                 }, { passive: true });
