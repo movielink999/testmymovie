@@ -329,6 +329,91 @@
                     isOpen: false,
                     orientation: undefined
                 };
+
+
+                // Prevent developer tools - all methods
+function disableDevTools() {
+    // Disable right-click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    // Disable keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Prevent F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+        if (
+            e.keyCode === 123 || 
+            (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+            (e.ctrlKey && e.keyCode === 85)
+        ) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Detect and disable console opening
+    const devtools = {
+        isOpen: false,
+        orientation: undefined
+    };
+    
+    // Function to clear page if developer tools are detected
+    const clearPage = () => {
+        document.body.innerHTML = "Developer tools detected. Access denied.";
+        document.body.style.background = "black";
+        document.body.style.color = "white";
+        document.body.style.display = "flex";
+        document.body.style.justifyContent = "center";
+        document.body.style.alignItems = "center";
+        document.body.style.height = "100vh";
+        document.body.style.fontFamily = "Arial, sans-serif";
+    };
+    
+    // Check using console.table trick
+    setInterval(() => {
+        const widthThreshold = Math.max(window.outerWidth - window.innerWidth, 160);
+        const heightThreshold = Math.max(window.outerHeight - window.innerHeight, 160);
+        
+        if (!(heightThreshold && widthThreshold)) {
+            // One of the dimensions matches, probably no devtools
+            return;
+        }
+        
+        if (
+            (window.Firebug && window.Firebug.chrome && window.Firebug.chrome.isInitialized) || 
+            widthThreshold > 160 || 
+            heightThreshold > 160
+        ) {
+            if (!devtools.isOpen) {
+                devtools.isOpen = true;
+                clearPage();
+            }
+        } else {
+            devtools.isOpen = false;
+        }
+    }, 1000);
+    
+    // Check using debugger trick
+    let checkCount = 0;
+    const checkDebugger = function() {
+        checkCount++;
+        const startTime = new Date().getTime();
+        debugger;
+        const endTime = new Date().getTime();
+        
+        if (endTime - startTime > 100) {
+            // Debugger was triggered and paused execution - likely dev tools open
+            clearPage();
+        }
+        
+        if (checkCount < 10) {
+            setTimeout(checkDebugger, 1000);
+        }
+    };
+    
+    checkDebugger();
+}
+
+// Initialize DevTools protection
+disableDevTools();
                 
                 // Function to clear page if developer tools are detected
                 const clearPage = () => {
